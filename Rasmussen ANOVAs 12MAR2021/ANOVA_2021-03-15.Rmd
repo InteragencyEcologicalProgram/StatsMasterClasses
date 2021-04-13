@@ -1,0 +1,574 @@
+---
+title: "t-tests and ANOVA"
+author: "Nick Rasmussen"
+date: "3/12/2021"
+output: 
+  html_document:
+   toc: true
+   toc_float: true
+   code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Goal
+
+We will cover how to run t-tests and ANOVA. To do this, we will look at zooplankton densities and how they vary between habitat types and among regions.
+
+
+# Set up
+
+## General resources
+
+[R for Data Science](https://r4ds.had.co.nz/): This book is the primary source for learning how to use the tidyverse packages, which are handy for all kinds of things. Also this whole book was created using RMarkdown! I'll just refer to it as RDS below.
+
+
+## Create an R script file
+
+In R Studio, create a new R script file. This is the file where you will write all your code. The field for this new file will appear in the upper left quadrant of the R Studio pane. 
+
+Save this script file as “ANOVA.R” in the same folder as the provided data file (zooplankton_density_example.csv).
+
+
+
+## Install and load required packages
+
+There are many packages that augment the functionality of the basics that are available in R. (see RDS book, section 3.1.1)
+
+To get started, you'll need the 'tidyverse' which is a suite of packages that are useful for data science.
+
+Packages only need to be installed once. After that, you can comment out this code with the '#'. In the package installation code, make sure the names of the packages are in quotes, or the code won't work.
+
+You will need to load the packages you want to use during every session using the library() function. As you load the packages, you'll get some warnings and other notifications. It's good to take a look at them, but most of the time, you don't need to worry about them. The ones we see below are about how the packages we are loading override similar functions in the base R packages.
+
+
+```{r install and load packages}
+
+#install.packages("tidyverse") #for data manipulation and visualization
+#install.packages("rstatix") #for statistical analysis
+
+library(tidyverse)
+library(rstatix)
+
+
+```
+
+Note: Packages can also be installed from the "Packages" tab in the lower right pane of RStudio.
+
+
+
+## Set the working directory
+
+By setting the working directory, we are providing R with the location for importing and exporting files. I chose this location because it is where the data file we need to import is located on my computer.  
+
+```{r set working directory}
+
+setwd("C:/Users/nrasmuss/OneDrive - California Department of Water Resources/Statistics/StatsMasterClass")
+
+
+```
+
+Note: The working directory can also be set from the menu in the top left (Session > Set working directory)
+
+
+
+
+## Read the data set into R
+
+Because we set the directory, R knows where to look for the data file.
+
+It is often easiest to import data into R as a comma delimited file, which involves using the read_csv() function. You can import data from other types of files too, but the import function will be a little different.
+
+Name your imported data set something short but distinctive. I named my "zoop_density".
+
+
+```{r import data}
+
+zoop_density<-read_csv("zoop_density_example.csv")
+
+```
+The output from the read_csv() functions tells us a little about the data set we've imported
+
+
+## Metadata for data set
+
+Description of columns in the zooplankton data set. This data set is loosely based on a real one from the Delta.
+
+**region:** The four regions included in the study: North, South, East, West.
+
+**habitat:** Half the samples were collected in open water (WAT) habitat while the other half were collected in areas with submerged aquatic vegetation (SAV).   
+
+**zoop_density:** Individuals per mL of water sampled with a tow net
+
+
+## Format the columns
+
+For our analyses, we want the columns with the region and habitat type data to be of type factor instead of character.
+
+For more information about the different types of data in R, see this webpage [Data types in R](https://statsandr.com/blog/data-types-in-r/).
+
+The keyboard shortcut for pipe (%>%): press and hold Shift + Control + M. See "Help" menu at the top for more RStudio keyboard shortcuts.
+
+```{r}
+#format the site and habitat columns
+zoopden<-zoop_density %>% #specifies the data set
+  mutate(across(where(is.character), factor)) #converts the two columns from character to factor
+
+#look at the data frame structure
+glimpse(zoopden)
+
+```
+
+
+
+# Explore the data
+
+## Generate a summary
+
+To explore the sites and habitats included in the data set, use the group_by() and summarize() functions. This will tell us us how many samples there are in each group.
+
+Learn more about manipulating data, RDS Section 5 (Data Transformations).
+
+```{r summary stats}
+
+(zoop_summary<-zoopden %>% #name of the data set
+  group_by(region, habitat) %>% #columns to group by
+  summarize(n = n())
+)
+
+```
+
+
+## Exploratory plots
+
+Visualizing the data before conducting statistics is really important. We'll make some plots of the zooplankton density data. 
+
+For general background, see RDS sections 3 (Data Visualization) and 7 (Exploratory Data Analysis). 
+
+```{r}
+#boxplot: zooplankton density grouped by region and habitat type 
+(plot_reg_hab<-ggplot(data=zoopden #specifies the data set
+                        , aes(x = habitat, y = zoop_density)) + #sets the x and y variables for the plots
+  geom_boxplot()+  #tells ggplot that we want a boxplot
+   facet_wrap(~region) #splits the data into four panels based on region
+)
+```
+
+There is an extreme value in open water habitat of the East region that is squishing all the data. This unusual point really stands out in a plot, which is why you should always visualize your data before doing analysis.
+
+
+# t-test
+
+For this exercise, you will determine whether the predictor habitat type (categorical) had a significant effect on zooplankton density (continuous). For now, we are going to ignore the different regions.
+
+Assumptions of the t-test:
+
+1. data points in the response are independent of one another
+1. there are no outliers (i.e., extreme values)
+2. the response data should be approximately normally distributed in each group
+3. variance of the response variable should be equal between the groups
+
+There's not really a test for the first assumption. Thinking about this assumption gets a bit philosophical in an estuary where everything is interconnected at some level. As a guide, use your knowledge of the data set and keep in mind the purpose of the analysis.
+
+The rest of the assumptions we can test and we will do so below.
+
+
+## Detecting outliers
+
+We already saw in the boxplots above there was a value that may be an outlier. We will use the function identify_outliers() to search the data set for extreme values.
+
+Values above Q3 + 1.5xIQR or below Q1 - 1.5xIQR are considered as outliers. 
+
+Values above Q3 + 3xIQR or below Q1 - #3xIQR are considered as extreme outliers.
+
+Q1 and Q3 are the first and third quartile, respectively. IQR is the interquartile range (IQR = Q3 - Q1).
+
+```{r}
+
+zoopden %>% #specifies the data set
+  group_by(habitat) %>% #groups the data by habitat type
+  identify_outliers(zoop_density) #looks for outliers in the zooplankton density data
+
+```
+There are four values that are outliers and one of those is an extreme outlier. 
+
+## Removing outliers
+
+The simplest way to deal with outliers, especially if there are just a few, is to remove them. Some people argue that you shouldn't remove values just because they are outliers. I don't necessarily disagree with them, but we won't get into that philosophical topic here. 
+
+```{r}
+
+zoopden_sub<-zoopden %>% #specifies the data set
+  filter(zoop_density<0.05) #removes any value over 0.05 individuals per mL
+
+```
+
+If we choose to be a purist and not remove outliers, we could instead switch to a non-parametric test like the Wilcoxon Signed-rank test. These tests make fewer assumptions than parametric tests and are more robust to outliers but are generally not as powerful.
+
+
+Now, let's plot the data again without the outlier. Because we are ignoring region for now, we will just group the data in the plot by habitat type.
+
+```{r}
+(plot_hab_sub<-ggplot(data=zoopden_sub, aes(x = habitat, y = zoop_density)) + 
+  geom_boxplot()
+)
+```
+
+## Tests for normality
+
+Now, that we've removed the outlier, we can check the assumption that the data are normally distributed. We will look at a couple different approaches. 
+
+The first is the Shapiro-Wilk normality test, which provides a p-value indicates whether the data are normally distributed. A p < 0.05 indicates that the data set is NOT normally distributed. Note that the smaller the data set, the harder it is to tell if the distribution is normal.
+
+For more information about this test, see this webpage [How to perform a Shapiro-Wilk test in R](https://www.statology.org/shapiro-wilk-test-r/)
+
+
+```{r}
+
+zoopden_sub %>% #specifies the data set
+  group_by(habitat) %>% #groups the data by habitat type
+  shapiro_test(zoop_density) #runs the Shapiro-Wilks normality test
+
+```
+
+It looks like the data for the open water passed the normality test (p=0.67), but the SAV habitat did not (p=0.04). Again, it's worth noting that for small data sets like these, we shouldn't get too hung up on the exact values because the reliability of the test is limited.
+
+
+```{r}
+(plot_hist <- ggplot(zoopden_sub, aes(x = zoop_density))+
+                 geom_histogram()+
+                 facet_wrap(~habitat)
+)
+```
+
+
+Let's try a normality test that is more visual called quantile-quantile plots. For more info about these plots, see [Understanding Q-Q Plots](https://data.library.virginia.edu/understanding-q-q-plots/.)
+
+```{r}
+(plot_hab_qq <- ggplot(zoopden_sub, aes(sample = zoop_density))+
+                 stat_qq() + stat_qq_line()+
+                 facet_wrap(~habitat)
+)
+```
+
+Interpreting these plots is a bit subjective and requires some experience. These are far from perfect, especially the one for the SAV habitat, but they look OK. A lot of Q-Q plots will look like this, particularly those for small data sets.
+
+
+If the normality test fails, a transformation (e.g., log transformation) could be applied to the data and the normality test re-run. If this doesn't work, an alternative is a non-parametric test like the Wilcoxon Signed-rank test. 
+
+
+
+## Homogeneity of variances test
+
+This test evaluates whether the spread of the zooplankton data is similar among the groups (i.e, habitat types).
+
+
+```{r}
+zoopden_sub %>% #specifies the data set
+  levene_test(zoop_density~habitat) #conducts the test
+
+```
+
+The p-value of the Levene’s test is not significant, suggesting that there is no significant difference between the variances of the two groups. This means that we have succeeded in meeting this assumption of the test. 
+
+
+## Running the t-test
+
+At long last, we finally get to test our hypothesis. The null hypothesis is that the two habitat types do not differ in their means. The alternative hypothesis, the one typically of more interest, is that the habitat types are different.
+
+By default, the t.test() function assumes the variance is unequal and gives results for the Welch's t-test, which is robust to this issue. We can run the t-test that assumes equal variance using var.equal=T because we confirmed the variances are equal.
+
+```{r}
+t_test(zoop_density ~ habitat, data = zoopden_sub, var.equal=T)
+
+```
+
+There is a significant difference between the two group. As we suspected from the box plots the zooplankton density in the SAV is higher than that of the open water. This could be because the vegetation provides more places for zooplankton to feed and hide from predators.
+
+
+# t-test: your turn
+
+You will run another t-test, this time based on two of the four regions. We ignore the other two regions for now because a t-test can only handle two predictor groups.
+
+So first, we create a subset of the data to isolate two regions 
+
+```{r}
+zoopden_ns<-zoopden_sub %>% 
+  filter(region == "North" | region == "South")
+```
+
+
+These are the steps in the process. Some of them you can skip because we've already done them.
+
+1. Create plots of the data (skip)
+2. Look for outliers (skip)
+3. Check the normality (assumption use at least one approach)
+4. Check the homogeneity of variances assumption
+5. run the analysis 
+
+## Plot the data
+
+```{r}
+(plot_ns<-ggplot(data=zoopden_ns, aes(x = region, y = zoop_density)) + 
+  geom_boxplot()
+)
+```
+
+The boxplots look good.
+
+
+## Check for outliers
+
+```{r}
+
+zoopden_ns %>% #specifies the data set
+  group_by(region) %>% #groups the data by region
+  identify_outliers(zoop_density) #looks for outliers in the zooplankton density data
+
+```
+
+There are no outliers at all.
+
+## Check the normality assumption
+
+
+First, the Shapiro-Wilk test
+
+```{r}
+
+zoopden_ns %>%
+  group_by(region) %>%
+  shapiro_test(zoop_density)
+
+```
+
+Both groups passed the normality test.
+
+
+
+Then the Q-Q plots
+
+```{r}
+(plot_ns_qq <- ggplot(zoopden_ns, aes(sample = zoop_density))+
+                 stat_qq() + stat_qq_line()+
+                 facet_wrap(~region)
+)
+```
+
+A little iffy but probably good enough.
+
+
+## Homogeneity of variances test
+
+```{r}
+#homogeneity of variances
+zoopden_ns %>% #specifies the data set
+  levene_test(zoop_density~region) #conducts the test
+
+
+```
+
+The p-value is large, which mean we do not reject the null hypothesis that the variances are equal. The assumption is met.
+
+## Run the t-test
+
+```{r}
+t.test(zoop_density ~ region, data = zoopden_ns, var.equal=T)
+
+```
+
+The p < 0.05, so the means of the groups are significantly different. Zooplankton densities are higher in the South region than the North region.
+
+
+# ANOVA 
+
+So you may have been wondering what to do if there are more than two groups in your predictor. That's where ANOVA comes in. A t-test is actually just a special case of an ANOVA where the number of groups is two. That's why we are covering them together in this workshop. 
+
+The steps in conducting an ANOVA should look familiar:
+
+1. Create plots of the data 
+2. Look for outliers 
+3. Check the normality 
+4. Check the homogeneity of variances assumption
+5. Run the ANOVA
+6. Conduct pairwise comparisons
+
+The last step is new. You'll see why we need it once we've run the ANOVA.
+
+
+## Resources
+
+[Quick-R](https://www.statmethods.net/stats/anova.html) has a nice "quick start" type guide. I recommend you play around with all the relevant functions on that page. 
+
+The [Personality Project](http://personality-project.org/r/r.guide/r.anova.html#oneway) has a nice series of examples that are worth checking out.
+
+This [webpage](https://www.statisticshowto.com/probability-and-statistics/hypothesis-testing/anova/) provides some good background about the ANOVA.
+
+
+## Create the data set
+
+We will continue to focus on the effect of region on zooplankton density. We will this time look at three of the four regions. As before, we will create a subset of the data set with the regions of interest.
+
+```{r}
+zoopden_nsw<-zoopden_sub %>% 
+  filter(region == "North" | region == "South" | region =="West")
+```
+
+
+## Plot the data
+
+```{r}
+#boxplot: zooplankton density grouped by region (North vs. South) 
+(plot_nsw<-ggplot(data=zoopden_nsw, aes(x = region, y = zoop_density)) + 
+  geom_boxplot()
+)
+```
+
+The boxplots look good. No signs of outliers or other forms of weirdness.
+
+
+## Shapiro-Wilk Normality test
+
+
+```{r}
+zoopden_nsw %>%
+  group_by(region) %>%
+  shapiro_test(zoop_density)
+```
+
+Based on the p-values, all data for all three groups approximates the normal distribution, which is good.
+
+## Homogeneity of variances test
+
+```{r}
+zoopden_nsw %>% #specifies the data set
+  levene_test(zoop_density~region) #conducts the test
+
+
+```
+
+The p-value of the Levene’s test is not significant, suggesting that there is no significant difference in variance among the three groups. 
+
+
+## Run the ANOVA
+```{r, include=T}
+
+mod_three_reg<-aov(zoop_density~region, data=zoopden_nsw)
+
+#look at summary of model output
+summary(mod_three_reg) 
+
+```
+
+
+## Diagnostic plots
+
+R generates a handy set of four plots from the model:
+
+1. Residual vs fitted values (shows if relationship between predictor and response is non-linear)
+2. Normal Q-Q plot (these should be familiar now)
+3. Scale-location (another way to check the homogeneity of variances assumption)
+4. Residuals vs. leverage (checks for influential values)
+
+For more info about these plots, see this [webpage](https://data.library.virginia.edu/diagnostic-plots/).
+
+
+```{r}
+plot(mod_three_reg)
+```
+
+Overall, these four plots look quite good, so we know that we are meeting the assumptions of the ANOVA and that the model is a good fit to the data.
+
+
+
+## Pairwise comparisons
+
+Right now, all we know is that at least one region is different from at least one other region. However, we probably want to know which specific regions are different from which other specific regions. This is why we do pairwise comparisons, which are also call multiple comparisons or post-hoc tests.
+
+We will use the Tukey Honestly Significantly different test. It conducts tests among all possible pairs of the regions and produces p-values. These p-values are adjusted (made larger) because the probably of rejecting the null hypothesis of no difference between groups increases with the number of tests conducted. Put another way, with more tests, you are more likely to get a significant difference just by chance.
+
+For more details about this test, see R-bloggers [Tukey’s Test for Post-Hoc Analysis](https://www.r-bloggers.com/2018/09/tukeys-test-for-post-hoc-analysis/)
+
+
+```{r}
+TukeyHSD(mod_three_reg)
+
+```
+
+All the p-values are less than 0.05, which means the regions are all different from one another. The West region has the highest zooplankton densities and the North region has the lowest.
+
+
+# ANOVA: your turn
+
+Use the version of the data set with all the data (all regions), except for the one outlier: zoopden_sub
+
+## Plotting
+
+```{r}
+#boxplot: zooplankton density grouped by region  
+(plot_reg<-ggplot(data=zoopden_sub, aes(x = region, y = zoop_density)) + 
+  geom_boxplot()
+)
+```
+
+The plot looks good.
+
+## Normality test
+
+```{r}
+#Shapiro-Wilks normality test: zooplankton density
+zoopden_sub %>%
+  group_by(region) %>%
+  shapiro_test(zoop_density)
+```
+
+The assumption of normality is met.
+
+
+## Homogeneity of variances test
+
+```{r}
+zoopden_sub %>% #specifies the data set
+  levene_test(zoop_density~region) #conducts the test
+
+```
+
+The assumption of homogeneity of variances is met too.
+
+## run the ANOVA
+
+```{r, include=T}
+
+mod_all_reg<-aov(zoop_density~region, data=zoopden_sub)
+
+#look at summary of model output
+summary(mod_all_reg) 
+
+```
+
+The p-value is very small, so there is at least one region that is different from at least one other region.
+
+
+
+## Diagnostic plots
+
+```{r}
+plot(mod_all_reg)
+```
+
+Overall, these plots look pretty good.
+
+## Conduct pairwise comparisons
+
+```{r}
+#perform multiple comparisons
+TukeyHSD(mod_all_reg)
+
+```
+
+Many but not all pairs of regions differ from one another. East and West don't differ (p=0.76). And note that the p-value for the North vs South comparison is larger than when we conducted the t-test earlier. In the t-test, p=0.02 but in the Tukey test p=0.058. This latter p-value is technically higher than 0.05 and therefore not significant anymore. This occurred because of the p-value adjustment made in the Tukey test.
+
+
+
