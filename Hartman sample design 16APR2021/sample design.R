@@ -7,7 +7,7 @@ library(tidyverse)
 
 
 #load data collected using three sites for analysis
-threesites = read_excel("testdata.xlsx", sheet = "Threesites")
+threesites = read_excel("Hartman sample design 16APR2021/testdata.xlsx", sheet = "Threesites")
 
 #take a quick look at the data
 View(threesites)
@@ -17,7 +17,7 @@ sum1 = summarise(group_by(threesites, SiteType),
                  mCPUE = mean(CPUE), sdCPUE = sd(CPUE), seCPUE = sdCPUE/length(CPUE))
 
 #quick plot
-p1 = ggplot(sum1, aes(x= SiteType, y = mCPUE)) + #define your data set, x and y variables
+p1 = ggplot(sum1, aes(x= SiteType, y = mCPUE, fill = SiteType)) + #define your data set, x and y variables
   geom_bar(stat = "identity") + #it's a bar plot that is plotting the actual values
   geom_errorbar(aes(ymin = mCPUE-seCPUE, ymax = mCPUE +seCPUE)) #add error bars
 p1
@@ -53,7 +53,7 @@ sum4 = summarise(group_by(sum3, SiteType), mCPUE2 = mean(mCPUE), sdCPUE = sd(mCP
                  seCPUE = sdCPUE/length(mCPUE))
 
 #plot it again
-p2 = ggplot(sum4, aes(x= SiteType, y = mCPUE2)) + geom_bar(stat = "identity") +
+p2 = ggplot(sum4, aes(x= SiteType, y = mCPUE2, fill = SiteType)) + geom_bar(stat = "identity") +
   geom_errorbar(aes(ymin = mCPUE2-seCPUE, ymax = mCPUE2 +seCPUE))
 p2
 
