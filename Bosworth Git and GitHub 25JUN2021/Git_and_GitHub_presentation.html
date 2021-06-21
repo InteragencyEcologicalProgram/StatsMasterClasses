@@ -202,6 +202,7 @@ slide:not(.current) .plotly.html-widget{
 <li>Adding Collaborators</li>
 <li>Avoiding Merge Conflicts</li>
 </ul></li>
+<li>General Workflows</li>
 </ul>
 
 </article></slide><slide class=""><hgroup><h2>Git vs. GitHub</h2></hgroup><article  id="git-vs.-github" class="build">
@@ -214,26 +215,23 @@ slide:not(.current) .plotly.html-widget{
 
 <ul>
 <li>Version control and backup</li>
-<li>Collaboration</li>
+<li><strong>Collaboration</strong></li>
 <li>Sharing and developing R packages</li>
 </ul>
 
 </article></slide><slide class=""><hgroup><h2>Common Terms</h2></hgroup><article  id="common-terms">
 
 <ul class = 'build'>
-<li>Repository</li>
-<li>Commit</li>
-<li>Push</li>
-<li>Pull</li>
-<li>Branch</li>
-<li>Organization</li>
+<li>Repository: a set of files managed by Git</li>
+<li>Commit: a &ldquo;snapshot&rdquo; of all of the files in the repository at a particular time</li>
+<li>Local repository: A project saved on your computer</li>
+<li>Remote repository: Version of the project that is hosted somewhere other than your computer. Most common is GitHub.</li>
+<li>Push: Sends changes made on a local repository to the remote repository</li>
+<li>Fetch: Retrieves changes from a remote repository, but does <strong>NOT</strong> change the state of the local repository in any way</li>
+<li>Pull: Fetches changes from a remote repository and merges them into the local repository</li>
+<li>Branch: Parallel tracks that allow multiple users to work on the same project without overwriting work</li>
+<li>Organization: shared accounts where businesses and open-source projects can collaborate across many projects at once</li>
 </ul>
-
-</article></slide><slide class=""><hgroup><h2>Common Terms </h2><h3> Local vs. Remote repositories</h3></hgroup><article  id="common-terms-local-vs.-remote-repositories" class="build">
-
-<p>Local: Saved on your computer only</p>
-
-<p>Remote: Versions of the project that are hosted somewhere other than your computer. Most common is GitHub.</p>
 
 </article></slide><slide class=""><hgroup><h2>Local vs. Remote repositories</h2></hgroup><article  id="local-vs.-remote-repositories" class="centered">
 
@@ -243,9 +241,9 @@ slide:not(.current) .plotly.html-widget{
 
 </article></slide><slide class=""><hgroup><h2>Configuring Git with your name and email</h2></hgroup><article  id="configuring-git-with-your-name-and-email">
 
-<p>Using Git Bash:</p>
+<p>Using Git Bash or command line:</p>
 
-<p><code>git config --global user.name &#39;Your Name&#39;</code><br/><code>git config --global user.email &#39;yourname@domain.com&#39;</code><br/>Check configuration with <code>git config --global --list</code></p>
+<p><code>git config --global user.name &#39;Your Name&#39;</code><br/><code>git config --global user.email &#39;yourname@domain.com&#39;</code><br/>Check configuration with <code>git config --global --list</code> <br> <br></p>
 
 <p>Using the <a href='https://usethis.r-lib.org/' title=''><code>usethis package</code></a> in R:</p>
 
@@ -255,21 +253,157 @@ slide:not(.current) .plotly.html-widget{
 
 </article></slide><slide class=""><hgroup><h2>Creating and Cloning Repositories</h2></hgroup><article  id="creating-and-cloning-repositories">
 
+<p>Purpose: Check configuration on our computers, and introduce basic concepts of Git and GitHub</p>
+
+<ol class = 'build'>
+<li>Create a new repository on GitHub</li>
+<li>Clone the new repository to your local computer using RStudio
+
+<ul>
+<li><em>File &gt; New Project &gt; Version Control &gt; Git</em></li>
+<li>Copy the URL of your new GitHub repository and paste it into &ldquo;repository URL&rdquo;</li>
+</ul></li>
+<li>Check if you have a local repository stored on your computer</li>
+</ol>
+
 </article></slide><slide class=""><hgroup><h2>Commit and Push from Local Repository</h2></hgroup><article  id="commit-and-push-from-local-repository">
+
+<ol class = 'build'>
+<li>Make a change to the README file in your local repository</li>
+<li>Stage and commit this change using the Git pane in RStudio</li>
+<li>Push your commit to your remote repository on GitHub
+
+<ul>
+<li>If you are a new GitHub user, you will be asked to provide your username and password</li>
+</ul></li>
+<li>Check if your local change is now on your GitHub remote</li>
+<li>Repeat the steps above to check if your GitHub credentials were cached properly (You should <strong>NOT</strong> be asked for your username and password a second time)</li>
+</ol>
 
 </article></slide><slide class=""><hgroup><h2>Commit in GitHub and Pull into Local Repository</h2></hgroup><article  id="commit-in-github-and-pull-into-local-repository">
 
+<ol class = 'build'>
+<li>Make a change to the README file in your remote repository on GitHub</li>
+<li>Commit this change in GitHub</li>
+<li>Pull change into your local repository using the Git pane in RStudio</li>
+<li>Confirm that the change is now in your local repository</li>
+</ol>
+
 </article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>Collaborating with Others</h2></hgroup><article  id="collaborating-with-others">
 
-</article></slide><slide class=""><hgroup><h2>Cloning vs. Forking Repositories</h2></hgroup><article  id="cloning-vs.-forking-repositories">
+</article></slide><slide class=""><hgroup><h2>Cloning vs. Forking Repositories</h2></hgroup><article  id="cloning-vs.-forking-repositories" class="build">
+
+<p>Clone:</p>
+
+<ul>
+<li>A copy of a remote repository stored as a local repository on your computer</li>
+<li>Able to push, fetch, and pull changes directly with the remote repository</li>
+<li>Usually the configuration with your own repositories or with other repositories that you are a collaborator on</li>
+</ul>
+
+<p>Fork:</p>
+
+<ul>
+<li>A special configuration which is usually a copy of someone else’s repository</li>
+<li>Able to fetch and pull changes and make edits on your forked copy</li>
+<li><strong>NOT</strong> able to directly push edits to the original repository, only to the forked repository</li>
+<li>Usually the configuration when you create pull requests or when you are not a collaborator on a public repository</li>
+</ul>
 
 </article></slide><slide class=""><hgroup><h2>Adding Collaborators</h2></hgroup><article  id="adding-collaborators">
 
+<p>Allows for others to clone your repository and directly push, fetch, and pull changes</p>
+
+<ol class = 'build'>
+<li>Open up &ldquo;Settings&rdquo; in your remote repository on GitHub</li>
+<li>Select &ldquo;Manage access&rdquo; and then &ldquo;Invite a collaborator&rdquo;</li>
+<li>Enter the username of your collaborator</li>
+<li>A confirmation email will be sent to your collaborator. Wait for them to confirm.</li>
+</ol>
+
 </article></slide><slide class=""><hgroup><h2>Avoiding Merge Conflicts</h2></hgroup><article  id="avoiding-merge-conflicts">
+
+<p>A merge conflict occurs when 2 people change the same lines in the same file without first pulling in the changes that the other has made. This is always a possibility when 2 or more people are actively working on a repository. <br> <br></p>
+
+<p>How to avoid:</p>
+
+<ul>
+<li>Communicate often with your collaborators</li>
+<li>Pull each time you open up the project in RStudio</li>
+<li>Use the workflow: <em>Pull &gt; Edit &gt; Pull &gt; Commit &gt; Push</em></li>
+<li>Pull before every commit, and commit often</li>
+</ul>
+
+</article></slide><slide class="segue dark nobackground level1"><hgroup class = 'auto-fadein'><h2>General Workflows</h2></hgroup><article  id="general-workflows">
+
+</article></slide><slide class=""><hgroup><h2>Creating Repositories</h2></hgroup><article  id="creating-repositories">
+
+<ol>
+<li>Create a new repository on GitHub</li>
+<li>Clone the new repository to your local computer using one of the following methods:
+
+<ul>
+<li>RStudio: <em>File &gt; New Project &gt; Version Control &gt; Git</em></li>
+<li>Git Bash or command line: <code>git clone &lt;repo URL&gt;</code></li>
+<li>Using the <a href='https://usethis.r-lib.org/' title=''><code>usethis package</code></a> in R:</li>
+</ul></li>
+</ol>
+
+<pre class = 'prettyprint lang-r'>usethis::create_from_github(&quot;repo URL&quot;)</pre>
+
+<p><br></p>
+
+<p><strong>TIP:</strong> Use a consistent directory on your computer for your local Git repositories</p>
+
+</article></slide><slide class=""><hgroup><h2>Committing Changes</h2></hgroup><article  id="committing-changes">
+
+<ol>
+<li>Make some changes to the repository</li>
+<li>Stage the changes using one of the following methods:
+
+<ul>
+<li>RStudio: check the box next to the file(s) you would like to commit in the Git pane</li>
+<li>Git Bash or command line: <code>git add &lt;directory or file&gt;</code></li>
+</ul></li>
+<li>Commit staged changes using one of the following methods:
+
+<ul>
+<li>RStudio: use the commit window accessed from the Git pane</li>
+<li>Git Bash or command line: <code>git commit -m &quot;&lt;message&gt;&quot;</code> <br> <br></li>
+</ul></li>
+</ol>
+
+<p><strong>TIP:</strong> Make each commit for one specific change to the repository</p>
+
+</article></slide><slide class=""><hgroup><h2>Pushing and Pulling</h2></hgroup><article  id="pushing-and-pulling">
+
+<p>Push:</p>
+
+<ul>
+<li>RStudio: use the button in the Git pane</li>
+<li>Git Bash or command line: <code>git push &lt;remote&gt; &lt;branch&gt;</code></li>
+</ul>
+
+<p>Push one or more commits to the remote repository once you have a finished product or fix <br> <br></p>
+
+<p>Pull:</p>
+
+<ul>
+<li>RStudio: use the button in the Git pane</li>
+<li>Git Bash or command line: <code>git pull &lt;remote&gt;</code></li>
+</ul>
+
+<p>For shared repositories, it is good practice to pull in the most recent changes in the remote repository at the beginning of your session and before you commit.</p>
 
 </article></slide><slide class=""><hgroup><h2>Sources and Useful References</h2></hgroup><article  id="sources-and-useful-references">
 
-<p>Much of the information in this presentation is from the <a href='https://happygitwithr.com/' title=''>Happy Git and GitHub for the useR</a> web document</p>
+<ul>
+<li>Some of the information in this presentation is from the <a href='https://happygitwithr.com/' title=''>Happy Git and GitHub for the useR</a> web document, which is a helpful resource.</li>
+<li><a href='https://docs.github.com/en' title=''>GitHub help pages</a></li>
+<li><a href='https://education.github.com/git-cheat-sheet-education.pdf' title=''>GitHub Cheat Sheet</a></li>
+<li><a href='https://www.atlassian.com/git/tutorials/atlassian-git-cheatsheet' title=''>Atlassian Cheat Sheet</a></li>
+<li>Google search or Stack Overflow</li>
+</ul>
 
 </article></slide><slide class=""><hgroup><h2>Possible more advanced topics</h2></hgroup><article  id="possible-more-advanced-topics">
 
