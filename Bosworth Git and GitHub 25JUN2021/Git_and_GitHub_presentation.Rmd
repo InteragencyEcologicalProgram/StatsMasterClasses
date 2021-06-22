@@ -203,8 +203,10 @@ For shared repositories, it is good practice to pull in the most recent changes 
 
 ## Possible more advanced topics
 
+- Resolving merge conflicts
+- Commit history and diff
+- Undoing changes
 - Branches
 - Pull requests
 - Merging branches
-- Undoing changes
 
