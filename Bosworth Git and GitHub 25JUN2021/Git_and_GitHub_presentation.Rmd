@@ -16,6 +16,7 @@ knitr::opts_chunk$set(echo = FALSE)
 - Provide a basic overview of Git and GitHub
 - Information on how to use these tools with data science projects
 - Focus is from a beginner perspective
+- Interactive - please feel free to ask questions or provide feedback during the workshop
 
 ## Overview of Workshop
 
@@ -199,12 +200,14 @@ For shared repositories, it is good practice to pull in the most recent changes 
 - [GitHub help pages](https://docs.github.com/en)
 - [GitHub Cheat Sheet](https://education.github.com/git-cheat-sheet-education.pdf)
 - [Atlassian Cheat Sheet](https://www.atlassian.com/git/tutorials/atlassian-git-cheatsheet)
+- The [`usethis package`](https://usethis.r-lib.org/) has some useful R functions for working with GitHub and pull requests 
 - Google search or Stack Overflow
 
-## Possible more advanced topics
+## More advanced topics to possibly cover
 
 - Resolving merge conflicts
 - Commit history and diff
+- gitignore file
 - Undoing changes
 - Branches
 - Pull requests
